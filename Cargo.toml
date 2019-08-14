@@ -1,0 +1,25 @@
+[package]
+name = "web-test01"
+version = "0.1.0"
+authors = ["apple <tynr426@126.com>"]
+edition = "2018"
+
+[dependencies]
+# env_logger = "0.5"
+actix = "*"
+actix-web = "1.0.0"
+actix-files = "0.1.1"
+actix-rt = "0.2.2"
+actix-web-actors = "1.0.0"
+
+futures = "0.1.25"
+serde="1.0.94"
+serde_derive="1.0.94"
+serde_json="1.0"
+markdown="*"
+log="0.4.7"
+log4rs="0.8.3"
+# reqwest="*"
+md5="0.6.1"
+base64="*"
+url = "2.0"

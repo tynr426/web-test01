@@ -1,0 +1,19 @@
+.DS_Store
+
+**/tagert/
+
+/target
+**/*.rs.bk
+
+
+# **/template
+# **/www
+# /www
+*/app/
+app/
+**/app/
+
+## 排除文件类型
+.zip
+.rar
+.DS_Store

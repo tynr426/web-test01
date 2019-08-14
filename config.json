@@ -1,0 +1,23 @@
+{
+    "title": "test.json",
+    "server": {
+        "root_dir": "./web/",
+        "static_dir": [
+            "static"
+        ],
+        "static_ext": [
+            ".css",
+            ".js",
+            ".html",
+            ".png"
+        ],
+        "port": 8060
+    },
+    "proxy": [{
+        "path": "/api/",
+        "target": [{
+            "url": "http://127.0.0.1:8090",
+            "weights": 90
+        }]
+    }]
+}
