@@ -24,7 +24,7 @@ pub fn proxy_config(scf: &mut web::ServiceConfig) {
 
 
 /// 代理请求处理
-fn request(
+pub fn request(
     req: HttpRequest,
     pr: web::Data<Proxy>,
     payload: web::Payload,

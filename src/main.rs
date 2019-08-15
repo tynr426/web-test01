@@ -4,7 +4,7 @@ use actix_files as afs;
 use actix_web::client::Client;
 use futures::Future;
 use url::Url;
-
+use crate::config::{Proxy, Config};
 mod proxy;
 mod config;
 mod errors;
@@ -44,9 +44,9 @@ fn main() -> std::io::Result<()> {
                     .handler(http::StatusCode::NOT_FOUND, errors::render_404)
             )
             // .configure(express::express_config)
-            .configure((scf: &mut web::ServiceConfig) {
-    
-                for p in cnf.proxy {
+            .configure(|scf: &mut web::ServiceConfig|{
+                let conf = Config::new("./config.json");
+                for p in conf.proxy {
                     let proxy_path = p.path;
                     let proxy_target = p.target;
                     scf.service(
@@ -54,7 +54,7 @@ fn main() -> std::io::Result<()> {
                             web::scope(&proxy_path)
                                 .data(Client::new())
                                 .data(Proxy::new(&proxy_path, proxy_target))
-                                .route("*", web::to_async(request))
+                                .route("*", web::to_async(proxy::request))
                         );
                 }
             })
