@@ -1,7 +1,7 @@
 
 
 // use actix_web::client::Client;
-use actix_web::{web, middleware,Error, HttpResponse, HttpRequest};
+use actix_web::{web,Error, HttpResponse, HttpRequest};
 use futures::{future::ok, Future, Stream};
 //use super::response::Response;
 mod response;
@@ -9,28 +9,64 @@ mod parameter;
 use response::Response;
 use parameter::Parameter;
 use actix_web::client::Client;
+use url::Url;
+use crate::config::{Proxy};
 
 
+/// 代理请求处理
+pub fn request(
+    req: HttpRequest,
+    pr: web::Data<Proxy>,
+    payload: web::Payload,
+    client: web::Data<Client>
+) -> impl Future<Item = HttpResponse, Error = Error> {
 
-/// api接口配置
-pub fn api_service_config(scf: &mut web::ServiceConfig) {
+    // 代理请求目标主机集群
+    let targets = &pr.target;
+    // 获取第一个目标主机
+    let target_url = &targets[0];
+    // 创建一个可变的url地址
+    let mut new_url = Url::parse(&target_url.url).unwrap();
     
-    scf.service(
-        // api 目录代理
-        web::scope("/api")
-            .wrap(
-                middleware::DefaultHeaders::new()
-                .header("X-Version", "0.2")
-                .header("access-control-allow-headers", "*")
-                .header("access-control-allow-methods", "POST, GET")
-                .header("access-control-allow-origin", "*")
-            )
-            .data(Client::new())
-            // 查询
-            .route("", web::get().to_async(api_get))
-            .route("", web::post().to_async(api_post))
-    );
+    let url_path = req.uri().path();    
+    let start_index = pr.path.len();
+    
+    // 设置请求的路径,并去掉代理目录前缀
+    new_url.set_path(&url_path[start_index..]);
+    new_url.set_query(req.uri().query());
+
+    // println!("{:?}", new_url);
+    // 从源请求中把头部信息设置到客户端对象上
+    let proxy_req = client
+        .request_from(new_url.as_str(), &req.head())
+        .no_decompress();
+    // 绑定远程ip实现获取到准确ip
+    let proxy_req = if let Some(addr) = req.head().peer_addr {
+        proxy_req.header("x-forwarded-for", format!("{}", addr.ip()))
+    } else {
+        proxy_req
+    };
+
+    // proxy_req.
+
+    // 代理请求数据并返回前端
+    proxy_req
+        .send_stream(payload)//发送源请求的源数据
+        .map_err(Error::from)
+        .map(|res| {
+            let mut client_resp = HttpResponse::build(res.status());
+            for (header_name, header_value) in res
+                .headers()
+                .iter()
+                .filter(|(h, _)| *h != "connection" && *h != "content-length")
+            {
+                client_resp.header(header_name.clone(), header_value.clone());
+            }
+            client_resp.streaming(res)
+        })
+
 }
+
 // 处理get方式的请求
 pub fn api_get(
     req: HttpRequest
