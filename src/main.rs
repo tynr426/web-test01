@@ -2,12 +2,12 @@ use actix_web::{App, HttpServer, http, middleware,web};//
 use actix_web::middleware::errhandlers::{ErrorHandlers};
 use actix_files as afs;
 use actix_web::client::Client;
-use crate::config::{Proxy, Config};
 
 mod config;
 mod errors;
 mod api;
-
+mod cacher;
+use config::{Proxy,Config};
 pub static CONFIG_PATH: &str = "config.json";
 
 /// 程序入口方法
@@ -18,9 +18,13 @@ fn main() -> std::io::Result<()> {
     //log4rs::init_file("log.yaml", Default::default()).unwrap();
 
     // 新建一个服务处理
-    let sys = actix_rt::System::new("cps-server");
+    let mut sys = actix_rt::System::new("cps-server");
 
     let cnf = Config::new(CONFIG_PATH);
+    // let cacher=Cacher::new(|path|{
+    //     Config::new(path)
+    // });
+    // let cnf=cacher.get_value(CONFIG_PATH);
     println!("cnf={:?}",cnf );
     // let proxy_url = Url::parse(&"http://b2b321.366ec.net").unwrap();
     let addr = format!("0.0.0.0:{}", cnf.server.port);
@@ -91,3 +95,35 @@ fn main() -> std::io::Result<()> {
 
     sys.run()
 }
+//  use std::thread;
+//  use std::time::Duration;
+
+//  use std::collections::HashMap;
+// pub struct Cacher<T>
+//      where T: Fn(u32) -> u32
+//  {
+//      calculation: T,
+//      value: Option<u32>,
+//  }
+
+//   impl<T> Cacher<T>
+//      where T: Fn(u32) -> u32
+//  {
+//      pub fn new(calculation: T) -> Self {
+//          Cacher {
+//              calculation,
+//              value: None,
+//          }
+//      }
+
+//      pub fn value(&mut self, arg: u32) -> u32 {
+//          match self.value {
+//              Some(v) => v,
+//              None => {
+//                  let v = (self.calculation)(arg);
+//                  self.value = Some(v);
+//                  v
+//              },
+//          }
+//      }
+//  }
