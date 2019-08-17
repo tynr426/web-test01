@@ -30,7 +30,7 @@
              Some(v1) => v1,
              None => {
                  let v1 = (self.calculation)(arg);
-                 opt.insert(arg.to_string(),Some(v1));
+                 opt.insert(arg.to_string(),v1);
                  v1
              },
          }
